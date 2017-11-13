@@ -31,8 +31,7 @@ def identificar_compra(df_data, end_date, goal_bid_price):
         bid_date = df_bid.iloc[0].Date
         bid_price = float(df_bid.iloc[0].Close)
         print('compra!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print('fecha de compra: {}'.format(bid_date))
-        print('precio de compra: {}'.format(bid_price))
+        print('fecha: {}, precio: ${}'.format(bid_date, bid_price))
 
         return bid_date, bid_price
 
@@ -46,8 +45,7 @@ def identificar_venta(df_data, bid_date, goal_ask_price):
         ask_date = df_ask.iloc[0].Date
         ask_price = float(df_ask.iloc[0].Close)
         print('venta!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print('fecha de venta: {}'.format(ask_date))
-        print('precio de venta: {}'.format(ask_price))
+        print('fecha: {}, precio: ${}'.format(ask_date, ask_price))
 
         return ask_date, ask_price
         
@@ -69,12 +67,13 @@ def main(capital, period):
 
     while fTrade:
         
+        print('---------------------')
+        
         try:
 
             # obtengo precios de compra y venta
             goal_bid_price, goal_ask_price = obtener_bid_ask(df_data, date, period)
-            print('meta de compra: {}'.format(goal_bid_price))
-            print('meta de venta: {}'.format(goal_ask_price))
+            print('metas: {} - {}'.format(goal_bid_price, goal_ask_price))
 
             # establecer momento de compra
             bid_date, bid_price = identificar_compra(df_data, date, goal_bid_price)
@@ -85,8 +84,7 @@ def main(capital, period):
             # establecer momento de venta
             ask_date, ask_price = identificar_venta(df_data, bid_date, goal_ask_price)
             capital += stocks * ask_price
-            print('capital: {}'.format(capital))
-            print('rend: {}%'.format((ask_price / bid_price - 1) * 100))
+            print('capital: {}, rend: {}%'.format(capital, (ask_price / bid_price - 1) * 100))
             stocks = 0
 
             # siguiene ciclo
@@ -96,11 +94,14 @@ def main(capital, period):
             print(str(exc))
             fTrade = False
 
+    print('---------------------')
+
     last_price = float(df_data[(df_data.Date == df_data.Date.max())].Close)
     last_capital = stocks * last_price + capital
 
     print('capital final: ${} (${} x {} + ${})'.format(last_capital, last_price, stocks, capital))
-    print('rend: {}%'.format((last_capital / beg_capital - 1) * 100))
+    print('rendimiento: {}%'.format((last_capital / beg_capital - 1) * 100))
+    print('muestreo: {}'.format(period))
 
     return True
 
