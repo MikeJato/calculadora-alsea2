@@ -5,14 +5,14 @@ from datetime import timedelta, datetime
 def obtener_bid_ask(df_data, end_date, periodo):
     
     # determino periodo de muestra
-    beg_date = end_date + timedelta(days=-period)
+    beg_date = end_date + timedelta(days=-periodo)
     print('periodo muestra: {} - {}'.format(beg_date, end_date))
  
     # obtengo muestra de datos a utilizar
     df_sample = df_data[(df_data.Date >= beg_date) & (df_data.Date <= end_date)]
 
     # calcular desviacion estandar
-    close_std  = float(df_sample.Close.std())
+    close_std  = float(df_sample.Close.std()) / 4
     print('desviacion std: {}'.format(close_std))
 
     # establecer precios de compra y venta
@@ -52,12 +52,11 @@ def identificar_venta(df_data, bid_date, goal_ask_price):
     else:
         raise Exception('imposible vender')
 
-def main(capital, period):
-    
+def proyectar_capital(capital, period):
     beg_capital = capital           # capital inicial
 
     # leer historico de precios
-    df_data = pd.read_csv('/Users/mike/calculadora-alsea2/data/ALSEA.MX.csv')   
+    df_data = pd.read_csv('/Users/mike/Downloads/ALSEA.MX.csv')   
     df_data.Date = df_data.Date.apply(lambda x: datetime.strptime(x, '%Y-%m-%d'))
 
     # determino periodo de muestra
@@ -98,14 +97,33 @@ def main(capital, period):
 
     last_price = float(df_data[(df_data.Date == df_data.Date.max())].Close)
     last_capital = stocks * last_price + capital
+    rend = (last_capital / beg_capital - 1)
 
     print('capital final: ${} (${} x {} + ${})'.format(last_capital, last_price, stocks, capital))
-    print('rendimiento: {}%'.format((last_capital / beg_capital - 1) * 100))
+    print('rendimiento: {}%'.format(rend * 100))
     print('muestreo: {}'.format(period))
 
-    return True
+    return last_capital, rend
+
+def main(capital, beg_period, end_period):
+
+    capitales = []
+    for period in range(beg_period, end_period):     
+        last_capital, rend = proyectar_capital(capital, period)
+        capitales.append({
+            'period': period
+            ,'capital': capital
+            ,'last_capital': last_capital
+            ,'rend': rend *  100
+            })
+
+    df_capitales = pd.DataFrame(capitales)
+    df_capitales.to_csv('/Users/mike/Downloads/ALSEA.MX.resultados.csv')
+
+    return df_capitales
 
 if __name__ == '__main__':
     capital = float(raw_input('capital: '))
-    period = int(raw_input('periodo: '))
-    print(main(capital, period))
+    beg_period = int(raw_input('periodo inicial: '))
+    end_period = int(raw_input('periodo final: '))
+    print(main(capital, beg_period, end_period))
